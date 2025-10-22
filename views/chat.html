@@ -1,84 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ChaoticVibe - Chat</title>
-  <link rel="stylesheet" href="/style.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChaoticVibe Chat</title>
+  <link rel="stylesheet" href="/style.css">
   <script src="/socket.io/socket.io.js"></script>
 </head>
-<body>
-  <div class="container">
-    <div class="chat-shell">
-      <div class="chat-header">
-        <img class="logo-sm" src="/EWbndKy4Tlesld1s5HLj9w.webp" alt="logo" />
-        <div id="userLabel">User</div>
-        <a id="logoutLink" href="/" class="logout">Logout</a>
-      </div>
+<body class="chat-body">
 
+  <audio id="notifySound" src="/notify.mp3" preload="auto"></audio>
+
+  <div class="chat-wrapper">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/EWbndKy4Tlesld1s5HLj9w.webp" class="logo-sm" alt="">
+        <h2>ChaoticVibe</h2>
+      </div>
+      <h3>🟢 Online</h3>
+      <ul id="onlineList"></ul>
+      <a href="/" class="logout">Logout</a>
+    </aside>
+
+    <!-- Main Chat -->
+    <main class="chat-main">
       <div id="messages" class="messages"></div>
+      <div id="typing" class="typing"></div>
 
       <form id="msgForm" class="msgForm">
-        <input id="msgInput" autocomplete="off" placeholder="Type a message..." />
-        <button type="submit">Send</button>
+        <input id="msgInput" placeholder="Type a message..." autocomplete="off">
+        <button>Send</button>
       </form>
-    </div>
+    </main>
   </div>
 
 <script>
-  // get username from query ?user=...
-  function getQuery(name) {
-    const params = new URLSearchParams(window.location.search);
-    return params.get(name) || "";
-  }
+const username = new URLSearchParams(window.location.search).get("user");
+if (!username) location.href = "/";
 
-  const username = decodeURIComponent(getQuery("user") || "").trim();
-  if (!username) {
-    // if no username present, go back to login
-    window.location = "/";
-  }
+const socket = io();
+socket.emit("join", username);
 
-  document.getElementById("userLabel").textContent = username;
+const messagesEl = document.getElementById("messages");
+const onlineList = document.getElementById("onlineList");
+const typingEl = document.getElementById("typing");
+const notifySound = document.getElementById("notifySound");
 
-  const socket = io();
-  socket.emit("join", username);
+function avatarLetter(name) {
+  return name[0]?.toUpperCase() || "?";
+}
 
-  const messagesEl = document.getElementById("messages");
-  function appendMessage({ username: u, text, timestamp }) {
-    const el = document.createElement("div");
-    el.className = "msg";
-    const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString() : "";
-    el.innerHTML = "<b>" + escapeHtml(u) + ":</b> " + escapeHtml(text) + (timeStr ? " <span class='t'>"+timeStr+"</span>" : "");
-    messagesEl.appendChild(el);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
+socket.on("message", (msg) => {
+  const div = document.createElement("div");
+  div.className = msg.username === username ? "msg me" : "msg";
+  div.innerHTML = `
+    <div class="avatar">${avatarLetter(msg.username)}</div>
+    <div class="bubble">
+      <b>${msg.username}</b><br>${msg.text}
+      <small>${msg.timestamp || ""}</small>
+    </div>`;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  if (msg.username !== username && msg.username !== "System") notifySound.play();
+});
 
-  socket.on("loadMessages", (rows) => {
-    messagesEl.innerHTML = "";
-    rows.forEach(r => appendMessage(r));
+socket.on("loadMessages", (msgs) => {
+  messagesEl.innerHTML = "";
+  msgs.forEach(m => {
+    const div = document.createElement("div");
+    div.className = m.username === username ? "msg me" : "msg";
+    div.innerHTML = `
+      <div class="avatar">${avatarLetter(m.username)}</div>
+      <div class="bubble">
+        <b>${m.username}</b><br>${m.text}
+      </div>`;
+    messagesEl.appendChild(div);
   });
+});
 
-  socket.on("message", (m) => {
-    appendMessage(m);
+socket.on("onlineUsers", (list) => {
+  onlineList.innerHTML = "";
+  list.forEach(u => {
+    const li = document.createElement("li");
+    li.textContent = u === username ? `${u} (You)` : u;
+    onlineList.appendChild(li);
   });
+});
 
-  document.getElementById("msgForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("msgInput");
-    const text = input.value.trim();
-    if (!text) return;
-    socket.emit("message", text);
-    input.value = "";
-  });
-
-  // small helper
-  function escapeHtml(s) {
-    if (!s && s !== 0) return "";
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+socket.on("typing", (data) => {
+  if (data.user !== username) {
+    typingEl.textContent = data.text;
+    setTimeout(() => typingEl.textContent = "", 2000);
   }
+});
+
+const input = document.getElementById("msgInput");
+input.addEventListener("input", () => {
+  socket.emit("typing", { user: username, text: `${username} is typing...` });
+});
+
+document.getElementById("msgForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const val = input.value.trim();
+  if (!val) return;
+  socket.emit("message", val);
+  input.value = "";
+});
 </script>
+
 </body>
 </html>
