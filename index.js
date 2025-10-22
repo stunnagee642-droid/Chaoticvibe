@@ -1,62 +1,22 @@
-// index.js
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// === DOM ELEMENTS ===
-const loginSection = document.getElementById('loginSection');
-const chatSection = document.getElementById('chatSection');
-const loginForm = document.getElementById('loginForm');
-const usernameInput = document.getElementById('username');
-const logoutBtn = document.getElementById('logoutBtn');
-const welcomeText = document.getElementById('welcomeText');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// === LOCAL STORAGE HANDLER ===
-function getUser() {
-  return localStorage.getItem('chaoticvibeUser');
-}
+// Fix paths for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-function setUser(username) {
-  localStorage.setItem('chaoticvibeUser', username);
-}
+// Serve all static files (images, CSS)
+app.use(express.static(path.join(__dirname, "public")));
 
-function clearUser() {
-  localStorage.removeItem('chaoticvibeUser');
-}
-
-// === NAVIGATION LOGIC ===
-function showChat() {
-  loginSection.style.display = 'none';
-  chatSection.style.display = 'flex';
-  welcomeText.textContent = `👋 Welcome ${getUser()}!`;
-}
-
-function showLogin() {
-  chatSection.style.display = 'none';
-  loginSection.style.display = 'flex';
-}
-
-// === INITIAL LOAD ===
-window.addEventListener('DOMContentLoaded', () => {
-  const user = getUser();
-  if (user) {
-    showChat();
-  } else {
-    showLogin();
-  }
+// Send the login page when visiting "/"
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "login.html"));
 });
 
-// === LOGIN FORM HANDLER ===
-loginForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const username = usernameInput.value.trim();
-  if (username.length < 3) {
-    alert('Username must be at least 3 characters.');
-    return;
-  }
-  setUser(username);
-  showChat();
-});
-
-// === LOGOUT HANDLER ===
-logoutBtn.addEventListener('click', () => {
-  clearUser();
-  showLogin();
+app.listen(PORT, () => {
+  console.log(`✅ ChaoticVibe running at http://localhost:${PORT}`);
 });
