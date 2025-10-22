@@ -2,7 +2,7 @@
 
 Welcome to **ChaoticVibe** – your futuristic neon chat platform with admin panel and persistent chat.
 
-![ChaoticVibe Logo](public/images/EWbndKy4Tlesld1s5HLj9w.webp)
+![ChaoticVibe Logo](./EWbndKy4Tlesld1s5HLj9w.webp)
 
 ## Features
 - Login/Signup (username only)
