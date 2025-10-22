@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ChaoticVibe - Chat</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="chat-shell">
+      <div class="chat-header">
+        <img class="logo-sm" src="/EWbndKy4Tlesld1s5HLj9w.webp" alt="logo" />
+        <div id="userLabel">User</div>
+        <a id="logoutLink" href="/" class="logout">Logout</a>
+      </div>
+
+      <div id="messages" class="messages"></div>
+
+      <form id="msgForm" class="msgForm">
+        <input id="msgInput" autocomplete="off" placeholder="Type a message..." />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+
+<script>
+  // get username from query ?user=...
+  function getQuery(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name) || "";
+  }
+
+  const username = decodeURIComponent(getQuery("user") || "").trim();
+  if (!username) {
+    // if no username present, go back to login
+    window.location = "/";
+  }
+
+  document.getElementById("userLabel").textContent = username;
+
+  const socket = io();
+  socket.emit("join", username);
+
+  const messagesEl = document.getElementById("messages");
+  function appendMessage({ username: u, text, timestamp }) {
+    const el = document.createElement("div");
+    el.className = "msg";
+    const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString() : "";
+    el.innerHTML = "<b>" + escapeHtml(u) + ":</b> " + escapeHtml(text) + (timeStr ? " <span class='t'>"+timeStr+"</span>" : "");
+    messagesEl.appendChild(el);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  socket.on("loadMessages", (rows) => {
+    messagesEl.innerHTML = "";
+    rows.forEach(r => appendMessage(r));
+  });
+
+  socket.on("message", (m) => {
+    appendMessage(m);
+  });
+
+  document.getElementById("msgForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("msgInput");
+    const text = input.value.trim();
+    if (!text) return;
+    socket.emit("message", text);
+    input.value = "";
+  });
+
+  // small helper
+  function escapeHtml(s) {
+    if (!s && s !== 0) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+</script>
+</body>
+</html>
