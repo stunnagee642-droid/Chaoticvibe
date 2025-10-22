@@ -1,38 +1,55 @@
-// Signup page
-app.get('/signup', (req, res) => res.sendFile(__dirname + '/views/signup.html'));
-app.post('/signup', async (req, res) => {
+// --- IMPORTS ---
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+import session from "express-session";
+import pkg from "pg";
+const { Pool } = pkg;
+
+// --- CONFIG ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Database
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+// --- MIDDLEWARE ---
+app.use(express.static(path.join(__dirname, "public")));
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: "chaoticvibe-secret",
+  resave: false,
+  saveUninitialized: true
+}));
+
+// --- ROUTES ---
+app.get("/", (req, res) => res.redirect("/login"));
+
+// ✅ Your login/signup routes go *after* app is defined:
+app.get("/signup", (req, res) => res.sendFile(__dirname + "/views/signup.html"));
+app.post("/signup", async (req, res) => {
   const { username, password } = req.body;
-  const user = await pool.query('SELECT * FROM users WHERE username=$1', [username]);
-  if(user.rows.length) return res.send('Username already exists, bro!');
-  await pool.query('INSERT INTO users(username, password) VALUES($1,$2)', [username, password]);
+  const existing = await pool.query("SELECT * FROM users WHERE username=$1", [username]);
+  if (existing.rows.length) return res.send("Username already exists, bro!");
+  await pool.query("INSERT INTO users(username, password) VALUES($1,$2)", [username, password]);
   req.session.username = username;
-  res.redirect('/chat');
+  res.redirect("/chat");
 });
 
-// Login page
-app.get('/login', (req, res) => res.sendFile(__dirname + '/views/login.html'));
-app.post('/login', async (req, res) => {
+app.get("/login", (req, res) => res.sendFile(__dirname + "/views/login.html"));
+app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  const user = await pool.query('SELECT * FROM users WHERE username=$1 AND password=$2', [username, password]);
-  if(user.rows.length){
+  const user = await pool.query("SELECT * FROM users WHERE username=$1 AND password=$2", [username, password]);
+  if (user.rows.length) {
     req.session.username = username;
-    res.redirect('/chat');
-  } else res.send('Invalid login, bro!');
+    res.redirect("/chat");
+  } else res.send("Invalid login, bro!");
 });
 
-// Chat page
-app.get('/chat', async (req, res) => {
-  if(!req.session.username) return res.redirect('/login');
-  const messages = await pool.query('SELECT * FROM messages ORDER BY time ASC');
-  res.render('chat.ejs', { username: req.session.username, messages: messages.rows });
-});
-
-// Admin panel
-app.get('/admin', async (req, res) => {
-  if(!req.session.username) return res.redirect('/login');
-  const user = await pool.query('SELECT * FROM users WHERE username=$1', [req.session.username]);
-  if(!user.rows[0].is_admin) return res.send('Access denied, bro!');
-  const allUsers = await pool.query('SELECT id, username FROM users');
-  const allMessages = await pool.query('SELECT * FROM messages ORDER BY time DESC');
-  res.render('admin.ejs', { users: allUsers.rows, messages: allMessages.rows });
-});
+// --- SERVER START ---
+app.listen(port, () => console.log(`ChaoticVibe running on port ${port}, bro 😎`));
