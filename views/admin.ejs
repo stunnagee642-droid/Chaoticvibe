@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel - ChaoticVibe</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<h2>Admin Panel, bro 😎</h2>
+
+<h3>Users</h3>
+<table border="1" style="margin:auto;color:white;">
+<tr><th>ID</th><th>Username</th><th>Action</th></tr>
+<% users.forEach(u => { %>
+<tr>
+  <td><%= u.id %></td>
+  <td><%= u.username %></td>
+  <td>
+    <form method="POST" action="/admin/delete-user" style="display:inline;">
+      <input type="hidden" name="userId" value="<%= u.id %>">
+      <button type="submit">Delete</button>
+    </form>
+  </td>
+</tr>
+<% }) %>
+</table>
+
+<h3>Messages</h3>
+<table border="1" style="margin:auto;color:white;">
+<tr><th>ID</th><th>User</th><th>Message</th><th>Time</th><th>Action</th></tr>
+<% messages.forEach(m => { %>
+<tr>
+  <td><%= m.id %></td>
+  <td><%= m.user_name %></td>
+  <td><%= m.message %></td>
+  <td><%= new Date(m.time).toLocaleString() %></td>
+  <td>
+    <form method="POST" action="/admin/delete-message" style="display:inline;">
+      <input type="hidden" name="messageId" value="<%= m.id %>">
+      <button type="submit">Delete</button>
+    </form>
+  </td>
+</tr>
+<% }) %>
+</table>
+
+<a href="/chat">Back to Chat</a>
+</body>
+</html>
