@@ -1,55 +1,62 @@
-// --- IMPORTS ---
-import express from "express";
-import path from "path";
-import { fileURLToPath } from "url";
-import session from "express-session";
-import pkg from "pg";
-const { Pool } = pkg;
+// index.js
 
-// --- CONFIG ---
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const app = express();
-const port = process.env.PORT || 3000;
+// === DOM ELEMENTS ===
+const loginSection = document.getElementById('loginSection');
+const chatSection = document.getElementById('chatSection');
+const loginForm = document.getElementById('loginForm');
+const usernameInput = document.getElementById('username');
+const logoutBtn = document.getElementById('logoutBtn');
+const welcomeText = document.getElementById('welcomeText');
 
-// Database
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+// === LOCAL STORAGE HANDLER ===
+function getUser() {
+  return localStorage.getItem('chaoticvibeUser');
+}
+
+function setUser(username) {
+  localStorage.setItem('chaoticvibeUser', username);
+}
+
+function clearUser() {
+  localStorage.removeItem('chaoticvibeUser');
+}
+
+// === NAVIGATION LOGIC ===
+function showChat() {
+  loginSection.style.display = 'none';
+  chatSection.style.display = 'flex';
+  welcomeText.textContent = `👋 Welcome ${getUser()}!`;
+}
+
+function showLogin() {
+  chatSection.style.display = 'none';
+  loginSection.style.display = 'flex';
+}
+
+// === INITIAL LOAD ===
+window.addEventListener('DOMContentLoaded', () => {
+  const user = getUser();
+  if (user) {
+    showChat();
+  } else {
+    showLogin();
+  }
 });
 
-// --- MIDDLEWARE ---
-app.use(express.static(path.join(__dirname, "public")));
-app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  secret: "chaoticvibe-secret",
-  resave: false,
-  saveUninitialized: true
-}));
-
-// --- ROUTES ---
-app.get("/", (req, res) => res.redirect("/login"));
-
-// ✅ Your login/signup routes go *after* app is defined:
-app.get("/signup", (req, res) => res.sendFile(__dirname + "/views/signup.html"));
-app.post("/signup", async (req, res) => {
-  const { username, password } = req.body;
-  const existing = await pool.query("SELECT * FROM users WHERE username=$1", [username]);
-  if (existing.rows.length) return res.send("Username already exists, bro!");
-  await pool.query("INSERT INTO users(username, password) VALUES($1,$2)", [username, password]);
-  req.session.username = username;
-  res.redirect("/chat");
+// === LOGIN FORM HANDLER ===
+loginForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const username = usernameInput.value.trim();
+  if (username.length < 3) {
+    alert('Username must be at least 3 characters.');
+    return;
+  }
+  setUser(username);
+  showChat();
 });
 
-app.get("/login", (req, res) => res.sendFile(__dirname + "/views/login.html"));
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  const user = await pool.query("SELECT * FROM users WHERE username=$1 AND password=$2", [username, password]);
-  if (user.rows.length) {
-    req.session.username = username;
-    res.redirect("/chat");
-  } else res.send("Invalid login, bro!");
+// === LOGOUT HANDLER ===
+logoutBtn.addEventListener('click', () => {
+  clearUser();
+  showLogin();
 });
-
-// --- SERVER START ---
-app.listen(port, () => console.log(`ChaoticVibe running on port ${port}, bro 😎`));
