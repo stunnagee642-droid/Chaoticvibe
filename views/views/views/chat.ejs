@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ChaoticVibe Chat</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<img src="/images/chaoticvibe.png" alt="ChaoticVibe Logo" style="width:200px;margin:20px auto;display:block;">
+<h2>Welcome, <%= username %>, bro 😎</h2>
+<form method="POST" action="/message">
+  <input name="message" placeholder="Type your message..." required />
+  <button type="submit">Send</button>
+</form>
+<hr>
+<div id="messages">
+  <% messages.forEach(msg => { %>
+    <p><strong><%= msg.user_name %>:</strong> <%= msg.message %> <small>(<%= new Date(msg.time).toLocaleTimeString() %>)</small></p>
+  <% }) %>
+</div>
+<a href="/admin">Admin Panel (if bro is admin)</a>
+</body>
+</html>
