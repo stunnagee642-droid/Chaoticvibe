@@ -1,124 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Chat — <%= other.fullname %></title>
-  <link rel="stylesheet" href="/style.css" />
-  <script src="/socket.io/socket.io.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChaoticVibe Chat</title>
+  <link rel="stylesheet" href="/style.css">
 </head>
-<body class="chat-body">
-  <div style="width:100%;display:flex;justify-content:center;">
-    <div class="chat-wrapper" style="max-width:1100px;">
-      <aside class="sidebar" style="width:260px;">
-        <div class="sidebar-header">
-          <img src="/EWbndKy4Tlesld1s5HLj9w.webp" class="logo-sm" alt="">
-          <div>
-            <div style="font-weight:700;"><%= me.fullname %></div>
-            <div style="font-size:12px;color:#c9a6ff;"><%= me.phone %></div>
-          </div>
-        </div>
-        <h3>Contacts</h3>
-        <p style="color:#cfc1ff;font-size:13px;">Tap back to return</p>
-        <a href="/home" class="logout">Back</a>
-      </aside>
-
-      <main class="chat-main" style="flex:1;">
-        <div style="padding:12px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;gap:12px;">
-          <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(90deg,#9d00ff,#4400ff);display:flex;align-items:center;justify-content:center;">
-            <b><%= other.fullname.charAt(0).toUpperCase() %></b>
-          </div>
-          <div>
-            <div style="font-weight:700;"><%= other.fullname %></div>
-            <div style="font-size:12px;color:#cfc1ff;"><%= other.phone %></div>
-          </div>
-        </div>
-
-        <div id="messages" class="messages" style="padding:16px;">
-          <% messages.forEach(function(m){ 
-               const isMe = m.from_phone === me.phone; %>
-            <div class="msg <%= isMe ? 'me' : '' %>">
-              <div class="avatar"><%= (isMe ? me.fullname : other.fullname).charAt(0).toUpperCase() %></div>
-              <div class="bubble">
-                <b><%= isMe ? me.fullname : other.fullname %></b><br>
-                <%= m.text %>
-                <small><%= new Date(m.timestamp).toLocaleString() %></small>
-              </div>
-            </div>
-          <% }) %>
-        </div>
-
-        <div id="typing" class="typing" style="padding:8px 16px;"></div>
-
-        <form id="msgForm" class="msgForm" style="padding:12px;display:flex;gap:8px;">
-          <input id="msgInput" placeholder="Type a message..." autocomplete="off" />
-          <button type="submit">Send</button>
-        </form>
-      </main>
+<body class="chat-page">
+  <header class="chat-header">
+    <div style="display:flex;align-items:center;">
+      <button onclick="goBack()" style="margin-right:10px;background:none;border:none;color:white;font-size:1.4rem;">←</button>
+      <img src="/EWbndKy4Tlesld1s5HLj9w.webp" alt="user">
+      <div>
+        <h3 id="chatUser">User</h3>
+        <small>online</small>
+      </div>
     </div>
+    <div>
+      <button style="background:none;border:none;color:white;font-size:1.2rem;">⋮</button>
+    </div>
+  </header>
+
+  <section class="chat-messages" id="messages">
+    <div class="message received">
+      Hey there 👋
+    </div>
+    <div class="message sent">
+      Yo bro! How’s ChaoticVibe?
+      <span class="ticks">✔✔</span>
+    </div>
+  </section>
+
+  <div class="chat-input">
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">➤</button>
   </div>
 
-<script>
-  const me = { phone: "<%= me.phone %>", fullname: "<%= me.fullname %>" };
-  const other = { phone: "<%= other.phone %>", fullname: "<%= other.fullname %>" };
-  const convoId = "<%= convoId %>";
+  <script>
+    // --- dynamic chat header name ---
+    const params = new URLSearchParams(window.location.search);
+    const user = params.get('user') || 'Unknown';
+    document.getElementById('chatUser').textContent = user;
 
-  const socket = io();
-
-  // auth with phone so server can track online users
-  socket.emit("auth", { phone: me.phone });
-
-  // join convo room
-  socket.emit("joinRoom", { convoId, phone: me.phone });
-
-  const messagesEl = document.getElementById("messages");
-  const typingEl = document.getElementById("typing");
-  const input = document.getElementById("msgInput");
-
-  socket.on("message", (m) => {
-    // only show messages that are part of this convo (they're emitted to room already)
-    const isMe = m.from_phone === me.phone;
-    const div = document.createElement("div");
-    div.className = "msg " + (isMe ? "me" : "");
-    div.innerHTML = `
-      <div class="avatar">${isMe ? me.fullname.charAt(0).toUpperCase() : other.fullname.charAt(0).toUpperCase()}</div>
-      <div class="bubble">
-        <b>${isMe ? me.fullname : other.fullname}</b><br>
-        ${escapeHtml(m.text)}
-        <small>${new Date(m.timestamp).toLocaleString()}</small>
-      </div>`;
-    messagesEl.appendChild(div);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-    // notification sound: (if you upload file, change /notification.mp3)
-    if (!isMe) {
-      try { new Audio('/notification.mp3').play().catch(()=>{}); } catch(e){}
+    function goBack() {
+      window.location.href = '/home';
     }
-  });
 
-  socket.on("typing", (d) => {
-    if (d && d.phone !== me.phone) {
-      typingEl.textContent = `${d.phone} is typing...`;
-      setTimeout(() => typingEl.textContent = "", 1800);
+    // --- message sending simulation ---
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const msgBox = document.createElement('div');
+      msgBox.className = 'message sent';
+      msgBox.innerHTML = text + ' <span class="ticks">✔✔</span>';
+      document.getElementById('messages').appendChild(msgBox);
+      input.value = '';
+
+      msgBox.scrollIntoView({ behavior: 'smooth' });
+
+      // simulate reply
+      setTimeout(() => {
+        const reply = document.createElement('div');
+        reply.className = 'message received';
+        reply.textContent = 'Got it!';
+        document.getElementById('messages').appendChild(reply);
+        reply.scrollIntoView({ behavior: 'smooth' });
+      }, 1500);
     }
-  });
-
-  // send typing event
-  input.addEventListener("input", () => {
-    socket.emit("typing", { convoId, phone: me.phone });
-  });
-
-  // submit message
-  document.getElementById("msgForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const txt = input.value.trim();
-    if (!txt) return;
-    socket.emit("sendMessage", { convoId, from_phone: me.phone, to_phone: other.phone, text: txt });
-    input.value = "";
-  });
-
-  function escapeHtml(s) {
-    if (!s && s !== 0) return "";
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-</script>
+  </script>
 </body>
 </html>
