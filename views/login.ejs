@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>ChaoticVibe — Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChaoticVibe - Login</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
-<body class="login-body">
-  <div class="auth-box">
-    <img src="/EWbndKy4Tlesld1s5HLj9w.webp" style="width:100px;margin-bottom:12px;">
+<body class="auth-body">
+  <div class="auth-container">
+    <h1 class="logo">ChaoticVibe 🔥</h1>
     <h2>Login</h2>
+
     <form action="/login" method="POST">
-      <input name="phone" type="text" placeholder="Phone (e.g. +2547...)" required />
-      <input name="password" type="password" placeholder="Password" required />
+      <input type="text" name="username" placeholder="Username" required />
+      <input type="password" name="password" placeholder="Password" required />
       <button type="submit">Login</button>
     </form>
-    <p style="margin-top:10px;">No account? <a href="/signup">Sign up</a></p>
+
+    <p>Don’t have an account? <a href="/signup">Sign up</a></p>
   </div>
 </body>
 </html>
