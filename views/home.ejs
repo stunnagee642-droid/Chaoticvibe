@@ -1,49 +1,81 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>ChaoticVibe — Home</title>
-  <link rel="stylesheet" href="/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChaoticVibe - Home</title>
+  <link rel="stylesheet" href="/style.css">
 </head>
-<body class="chat-body">
-  <div style="width:100%;display:flex;justify-content:center;">
-    <div class="chat-wrapper" style="max-width:980px;">
-      <aside class="sidebar">
-        <div class="sidebar-header">
-          <img src="/EWbndKy4Tlesld1s5HLj9w.webp" class="logo-sm" alt="">
-          <div>
-            <div style="font-weight:700;"><%= me.fullname %></div>
-            <div style="font-size:12px;color:#c9a6ff;"><%= me.phone %></div>
-          </div>
-        </div>
-
-        <h3>Chats</h3>
-        <ul style="list-style:none;padding:0;margin-top:8px;">
-          <% contacts.forEach(function(c){ %>
-            <li style="padding:10px;border-radius:8px;margin-bottom:8px;background: rgba(255,255,255,0.02);">
-              <a href="/chat/<%= c.phone %>" style="color:white;text-decoration:none;display:flex;align-items:center;">
-                <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(90deg,#9d00ff,#4400ff);display:flex;align-items:center;justify-content:center;margin-right:12px;">
-                  <b><%= c.fullname.charAt(0).toUpperCase() %></b>
-                </div>
-                <div style="flex:1;">
-                  <div style="font-weight:600;"><%= c.fullname %></div>
-                  <div style="font-size:13px;color:#cfc1ff;"><%= c.last ? c.last.substring(0,40) : 'No messages yet' %></div>
-                </div>
-              </a>
-            </li>
-          <% }) %>
-        </ul>
-
-        <a href="/logout" class="logout" style="margin-top:12px;display:block;">Logout</a>
-      </aside>
-
-      <main style="flex:1;display:flex;align-items:center;justify-content:center;">
-        <div style="text-align:center;color:#cfc1ff;">
-          <h2>Welcome, <%= me.fullname %></h2>
-          <p>Tap a contact to open a private chat.</p>
-        </div>
-      </main>
+<body class="home-page">
+  <header class="home-header">
+    <h1>ChaoticVibe</h1>
+    <div>
+      <button onclick="window.location.href='/chat'">💬 Chats</button>
+      <button onclick="logout()">Logout</button>
     </div>
-  </div>
+  </header>
+
+  <section class="chat-list">
+    <div class="chat-item" onclick="openChat('Dargley')">
+      <img src="/EWbndKy4Tlesld1s5HLj9w.webp" alt="user">
+      <div class="chat-info">
+        <h3>Dargley</h3>
+        <p>Wallai</p>
+      </div>
+      <span class="chat-time">20:37</span>
+    </div>
+
+    <div class="chat-item" onclick="openChat('Blooms 2020 c✨')">
+      <img src="/EWbndKy4Tlesld1s5HLj9w.webp" alt="user">
+      <div class="chat-info">
+        <h3>Blooms 2020 c✨</h3>
+        <p>Ni wewe umepotia</p>
+      </div>
+      <span class="chat-time">20:32</span>
+    </div>
+
+    <div class="chat-item" onclick="openChat('KYC BY SIR WILLIAMS')">
+      <img src="/EWbndKy4Tlesld1s5HLj9w.webp" alt="user">
+      <div class="chat-info">
+        <h3>KYC BY SIR WILLIAMS</h3>
+        <p>Gaza2: who can trace Tanzanians with id...</p>
+      </div>
+      <span class="chat-time">20:30</span>
+    </div>
+
+    <div class="chat-item" onclick="openChat('Premier Candlesticks FX Traders')">
+      <img src="/EWbndKy4Tlesld1s5HLj9w.webp" alt="user">
+      <div class="chat-info">
+        <h3>Premier Candlesticks FX Traders</h3>
+        <p>Active members only...</p>
+      </div>
+      <span class="chat-time">20:12</span>
+    </div>
+  </section>
+
+  <!-- Floating button -->
+  <button class="floating-btn" onclick="newChat()">➕</button>
+
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav">
+    <button class="active">💬 Chats</button>
+    <button>📰 Updates</button>
+    <button>👥 Communities</button>
+    <button>📞 Calls</button>
+  </nav>
+
+  <script>
+    function logout() {
+      window.location.href = '/login';
+    }
+
+    function openChat(user) {
+      window.location.href = '/chat?user=' + encodeURIComponent(user);
+    }
+
+    function newChat() {
+      alert('New chat feature coming soon 🚀');
+    }
+  </script>
 </body>
 </html>
